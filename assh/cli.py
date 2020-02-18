@@ -39,10 +39,10 @@ def _autocomplete_instances(ctx, args, incomplete):
 @click.option("--log-level", required=False, default="warning", help="Set log level")
 # @click.option("--region", required=False, help="AWS Region")
 @click.option(
-    "--ssm",
-    is_flag=True,
-    default=False,
-    help="Connect via SSH over SSM Session Manager",
+    "-m",
+    "--mode",
+    default="ssh",
+    help="Connection mode (ssh, ssm, ssm-ssh)",
 )
 @click.option(
     "-v",
@@ -55,7 +55,7 @@ def _autocomplete_instances(ctx, args, incomplete):
     "-l", "--login_name", required=False, help="EC2 Instance Username Override"
 )
 @click.option("-i", "--identity_file", required=False, help="SSH Private Key")
-def main(query, log_level, ssm, via, login_name, identity_file):
+def main(query, log_level, mode, via, login_name, identity_file):
     logging.basicConfig(level=log_level.upper())
 
     query = " ".join(query)
@@ -109,7 +109,7 @@ def main(query, log_level, ssm, via, login_name, identity_file):
         dest_kwargs["ProxyJump"] = "jump"
 
     # SSM Support
-    if ssm:
+    if mode == "ssm-ssh":
         dest_kwargs["HostName"] = instance.id
         dest_kwargs[
             "ProxyCommand"
@@ -123,7 +123,10 @@ def main(query, log_level, ssm, via, login_name, identity_file):
     with open(conf_path, "w+") as conf_file:
         sshconf.write(conf_file)
 
-    ssh_command = ["ssh", "-F", str(conf_path), "destination"]
+    if mode == "ssm":
+        ssh_command = ["aws", "ssm", "start-session", "--target", instance.id]
+    else:
+        ssh_command = ["ssh", "-F", str(conf_path), "destination"]
 
     logging.info("Attempting to connect using command '%s'", " ".join(ssh_command))
     subprocess.run(ssh_command)

@@ -9,7 +9,10 @@ class Instance:
         self.state = aws_instance["State"]["Name"]
         self.type = aws_instance["InstanceType"]
         self.image = aws_instance["ImageId"]
-        self.keyname = aws_instance["KeyName"]
+        
+        # Keyname is optional as to support SSM-only access where instances
+        # may not have an attached keyname
+        self.keyname = aws_instance.get("KeyName")
 
         self.private_ip = aws_instance["PrivateIpAddress"]
         self.public_ip = aws_instance.get("PublicIpAddress")

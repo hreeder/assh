@@ -16,7 +16,7 @@ Usage: assh [OPTIONS] [QUERY]...
 
 Options:
   --log-level TEXT          Set log level
-  --ssm                     Connect via SSH over SSM Session Manager
+  -m, --mode TEXT           Connection mode (ssh, ssm, ssm-ssh)
   -v, --via TEXT            Proxy SSH via host
   -l, --login_name TEXT     EC2 Instance Username Override
   -i, --identity_file TEXT  SSH Private Key
@@ -26,7 +26,11 @@ Options:
 Basic usage can be with `assh i-abc123def`, however `assh` will search based on the Name tag as well, so if instance `i-abc123def` has a name of `Target`, `assh target` would allow connection.
 
 ### Parameters
-* `--ssm`: This will cause the SSH connection to be proxied over SSM's Session manager. This has an extra dependency on your system having `awscli` and `session-manager-plugin` both configured.
+* `-m` / `--mode`: Valid values: `ssh`, `ssm`, `ssm-ssh`:
+  * `ssh`: This creates a plain SSH connection. (**Default**)
+  * `ssm`: This starts a session using SSM Session Manager. This **does not** utilise SSH at all.
+  * `ssm-ssh`: This will cause the SSH connection to be proxied over SSM's Session manager.
+  * Both `ssm` and `ssm-ssh` have an extra dependency on your system having `awscli` and `session-manager-plugin` both configured.
 * `-v` / `--via`: This allows you to use a given instance as a jump host to get to the final destination, ie `assh --via i-789def123 i-123abcdef` will cause the connection to get routed like so: `Client ---> i-789def123 --> i-123abcdef`. This parameter supports tab completion if [configured](#autocompletion).
 * `-l` / `--login_name`: This allows you to override the default username resolution functionality with a given name.
 * `-i` / `--identity_file`: This allows you to set your SSH private key.
