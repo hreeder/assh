@@ -39,10 +39,7 @@ def _autocomplete_instances(ctx, args, incomplete):
 @click.option("--log-level", required=False, default="warning", help="Set log level")
 # @click.option("--region", required=False, help="AWS Region")
 @click.option(
-    "-m",
-    "--mode",
-    default="ssh",
-    help="Connection mode (ssh, ssm, ssm-ssh)",
+    "-m", "--mode", default="ssh", help="Connection mode (ssh, ssm, ssm-ssh)",
 )
 @click.option(
     "-v",
@@ -72,6 +69,14 @@ def main(query, log_level, mode, via, login_name, identity_file):
     if CONFIG_PATH.exists():
         with open(CONFIG_PATH) as config_file:
             config = yaml.load(config_file, Loader=yaml.SafeLoader)
+
+    if mode == "ssm":
+        start_session = ["aws", "ssm", "start-session", "--target", instance.id]
+        logging.info(
+            "Attempting to connect using command '%s'", " ".join(start_session)
+        )
+        subprocess.run(start_session)
+        return
 
     # Username
     resolved_username = login_name if login_name else instance.default_username()
@@ -123,10 +128,7 @@ def main(query, log_level, mode, via, login_name, identity_file):
     with open(conf_path, "w+") as conf_file:
         sshconf.write(conf_file)
 
-    if mode == "ssm":
-        ssh_command = ["aws", "ssm", "start-session", "--target", instance.id]
-    else:
-        ssh_command = ["ssh", "-F", str(conf_path), "destination"]
+    ssh_command = ["ssh", "-F", str(conf_path), "destination"]
 
     logging.info("Attempting to connect using command '%s'", " ".join(ssh_command))
     subprocess.run(ssh_command)
