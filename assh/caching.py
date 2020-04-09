@@ -19,10 +19,10 @@ def get_instances(cache_dir):
         with open(cache_path) as cache_file:
             cached_response = json.load(cache_file)
 
-    cache_updated = datetime.datetime.utcfromtimestamp(
-        cached_response.get("fetched_at", 0)
+    cache_updated = datetime.datetime.fromtimestamp(
+        cached_response.get("fetched_at", 0), tz=datetime.timezone.utc
     )
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.timezone.utc)
 
     if cache_updated < (now - datetime.timedelta(minutes=1)):
         instances = _get_fresh_instances()
