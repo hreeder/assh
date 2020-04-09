@@ -113,6 +113,25 @@ def test_centos_username_retreival(ec2: botostubs.EC2, ami_centos, public_subnet
 
     assert instance.default_username() == "centos"
 
-def test_handles_terminated_instances_gracefully(ec2: botostubs.EC2, terminated_aws_instance):
+
+def test_no_description_username_fallback(
+    ec2: botostubs.EC2, ami_custom, public_subnet
+):
+    """Tests username resolution expecting the default fallback to ec2-user."""
+    new_instance = ec2.run_instances(
+        **DEFAULT_INSTANCE_KWARGS,
+        ImageId=ami_custom["ImageId"],
+        SubnetId=public_subnet["SubnetId"],
+    )
+    instance_id = new_instance["Instances"][0]["InstanceId"]
+    instances = ec2.describe_instances(InstanceIds=[instance_id])
+    instance = Instance(instances["Reservations"][0]["Instances"][0])
+
+    assert instance.default_username() == "ec2-user"
+
+
+def test_handles_terminated_instances_gracefully(
+    ec2: botostubs.EC2, terminated_aws_instance
+):
     """Tests that no failures are encountered when parsing terminated instances."""
     get_instances()

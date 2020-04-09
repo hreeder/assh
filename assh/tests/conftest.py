@@ -87,6 +87,15 @@ def fxt_ami_centos(ec2: botostubs.EC2, public_subnet):
     yield image
 
 
+@pytest.fixture(name="ami_custom", scope="session")
+def fxt_ami_custom(ec2: botostubs.EC2, public_subnet):
+    instance = ec2.run_instances(**DEFAULT_INSTANCE_KWARGS, ImageId=IMAGE_NAME)
+    instance_id = instance["Instances"][0]["InstanceId"]
+
+    image = ec2.create_image(Name="mock_custom_application", InstanceId=instance_id)
+    yield image
+
+
 @pytest.fixture(name="public_aws_instance", scope="session")
 def fxt_public_aws_instance(ec2: botostubs.EC2, public_subnet, ami_amzn):
     new_instance = ec2.run_instances(
