@@ -1,4 +1,6 @@
-from typing import List
+import re
+
+from typing import List, Optional
 
 import boto3
 
@@ -55,12 +57,24 @@ class Instance:
             }
         )
 
-    def default_username(self) -> str:
+    def default_username(self, custom_rules: Optional[list] = None) -> str:
         ec2 = boto3.client("ec2")
         images = ec2.describe_images(ImageIds=[self.image])
         image = images["Images"][0]
         # Some images come back without a Description key
         description = image.get("Description", "").lower()
+
+        if custom_rules and isinstance(custom_rules, list):
+            for rule in custom_rules:
+                if "image-name" in rule and re.search(
+                    rule["image-name"], image["Name"]
+                ):
+                    return rule["username"]
+
+                if "description" in rule and re.search(
+                    rule["description"], description
+                ):
+                    return rule["username"]
 
         if "ubuntu" in description:
             return "ubuntu"
