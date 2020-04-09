@@ -130,6 +130,27 @@ def test_no_description_username_fallback(
     assert instance.default_username() == "ec2-user"
 
 
+def test_custom_username_matcher(ec2: botostubs.EC2, ami_ubuntu, public_subnet):
+    """Test custom username matchers."""
+    new_instance = ec2.run_instances(
+        **DEFAULT_INSTANCE_KWARGS,
+        ImageId=ami_ubuntu["ImageId"],
+        SubnetId=public_subnet["SubnetId"],
+    )
+    instance_id = new_instance["Instances"][0]["InstanceId"]
+    instances = ec2.describe_instances(InstanceIds=[instance_id])
+    instance = Instance(instances["Reservations"][0]["Instances"][0])
+
+    image_name_ubuntu_test = {"username": "test", "image-name": "ubuntu"}
+    assert instance.default_username([image_name_ubuntu_test]) == "test"
+
+    image_name_ubuntu_regex = {"username": "test", "image-name": "^.*ubuntu.*$"}
+    assert instance.default_username([image_name_ubuntu_regex]) == "test"
+
+    description_ubuntu_test2 = {"username": "test2", "description": "ubuntu"}
+    assert instance.default_username([description_ubuntu_test2]) == "test2"
+
+
 def test_handles_terminated_instances_gracefully(
     ec2: botostubs.EC2, terminated_aws_instance
 ):

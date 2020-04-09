@@ -79,7 +79,12 @@ def main(query, log_level, mode, via, login_name, identity_file):
         return
 
     # Username
-    resolved_username = login_name if login_name else instance.default_username()
+    username_patterns = config.get("username-patterns", {}).get(current_aws_profile, [])
+    username_patterns.extend(config.get("global-username-patterns", []))
+    logging.info("Gathered custom username patterns: %s", username_patterns)
+    resolved_username = (
+        login_name if login_name else instance.default_username(username_patterns)
+    )
     logging.info("Resolved username as '%s'", resolved_username)
     dest_kwargs["User"] = resolved_username
 

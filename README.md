@@ -45,11 +45,22 @@ default-keypairs:
 profiles:
   aws-profile-top-secret:
     top-secret-keypair: ~/.ssh/id_top_secret
+global-username-patterns:
+- username: fred
+  image-name: .*
+username-patterns:
+  aws-profile-top-secret:
+  - username: foo
+    image-name: bar
+  - username: baz
+    description: qux
 ```
 
 * `default-key` allows a default private key to be supplied.
 * `default-keypairs` is a mapping of keypair names to private key locations on the local filesystem. "Keypair names" refers to the name visibile in the AWS console/API when describing an instance (or use `aws ec2 describe-key-pairs` and reference the `KeyName` value.)
 * `profiles` allows for mapping of specific keypairs (like in the `default-keypairs` section), but per locally configured AWS profile. This means you can have a profile configured as `[profile aws-profile-top-secret]` in your `~/.aws/config`, and the above config file would map `top-secret-keypair` to `~/.ssh/id_top_secret` only for that AWS profile.
+* `global-username-patterns` allows the default username resolution to be extended with a custom set of patterns. Each entry in the list MUST have a `username` field, and can have an `image-name`, or a `description` field.
+* `username-patterns` allows for the same mapping to exist, but on a per-AWS profile name, similar to the `profiles` section above. (In future these two sections should be merged, but to preserve compatibility they are not being merged at the corrent time)
 
 ## Autocompletion
 * Bash: `eval "$(_ASSH_COMPLETE=source assh)"`
