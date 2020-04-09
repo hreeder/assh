@@ -9,7 +9,7 @@ class Instance:
         self.state = aws_instance["State"]["Name"]
         self.type = aws_instance["InstanceType"]
         self.image = aws_instance["ImageId"]
-        
+
         # Keyname is optional as to support SSM-only access where instances
         # may not have an attached keyname
         self.keyname = aws_instance.get("KeyName")
@@ -59,11 +59,13 @@ class Instance:
         ec2 = boto3.client("ec2")
         images = ec2.describe_images(ImageIds=[self.image])
         image = images["Images"][0]
+        # Some images come back without a Description key
+        description = image.get("Description", "").lower()
 
-        if "ubuntu" in image["Description"].lower():
+        if "ubuntu" in description:
             return "ubuntu"
 
-        if "centos" in image["Description"].lower():
+        if "centos" in description:
             return "centos"
 
         return "ec2-user"  # Default to amazon linux / RHEL default username
