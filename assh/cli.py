@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
-import datetime
-import json
+import contextlib
 import logging
 import os
 import random
+import signal
 import string
 import subprocess
 
 from pathlib import Path
-from pprint import pprint
 
-import boto3
 import click
 import yaml
 
@@ -24,14 +22,28 @@ CACHE_DIR = TOOL_DIR / "cache"
 
 
 def _autocomplete_instances(ctx, args, incomplete):
-    autocomplete = [
-        (instance.id, instance.name) for instance in get_instances(CACHE_DIR)
-    ]
     return [
         (instance.id, instance.name)
         for instance in get_instances(CACHE_DIR)
         if (incomplete in instance.id or incomplete.lower() in instance.name.lower())
     ]
+
+
+# Credit for this function: https://github.com/hreeder/assh/issues/3#issuecomment-865436486
+@contextlib.contextmanager
+def ignore_user_entered_signals():
+    """
+    Ignores user entered signals to avoid process getting killed.
+    """
+    signal_list = [signal.SIGINT, signal.SIGQUIT, signal.SIGTSTP]
+    actual_signals = []
+    for user_signal in signal_list:
+        actual_signals.append(signal.signal(user_signal, signal.SIG_IGN))
+    try:
+        yield
+    finally:
+        for sig, user_signal in enumerate(signal_list):
+            signal.signal(user_signal, actual_signals[sig])
 
 
 @click.command()
@@ -75,7 +87,8 @@ def main(query, log_level, mode, via, login_name, identity_file):
         logging.info(
             "Attempting to connect using command '%s'", " ".join(start_session)
         )
-        subprocess.run(start_session)
+        with ignore_user_entered_signals():
+            subprocess.run(start_session)
         return
 
     # Username
