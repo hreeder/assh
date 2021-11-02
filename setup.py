@@ -16,6 +16,7 @@ setup(
             "moto~=1.3.14",
             "pydocstyle~=5.0.2",
             "pytest~=5.3.5",
+            "pytest-cov~=2.8.1",
             "pytest-mock~=2.0.0",
         ]
     },
